@@ -1,3 +1,7 @@
+# do not stage these directories
+data/*
+dev/*
+
 # History files
 .Rhistory
 .Rapp.history
