@@ -1,11 +1,13 @@
 
 library(arrow)
 library(pryr)
-library(tidyverse)
 library(doremifasol)
 library(fs)
 library(glue)
 library(duckdb)
+library(tidyverse)
+
+conflicted::conflict_prefer("filter", "dplyr")
 
 
 PATH_DATA <- "data"
