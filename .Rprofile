@@ -3,6 +3,9 @@ library(arrow)
 library(pryr)
 library(tidyverse)
 library(doremifasol)
+library(fs)
+library(glue)
+library(duckdb)
 
 
 PATH_DATA <- "data"
