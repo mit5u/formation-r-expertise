@@ -17,3 +17,4 @@ PATH_FINAL <- file.path(PATH_DATA, "final")
 PATH_DOREMIFASOL <- file.path(PATH_INPUT, "doremifasol")
 
 # load(file = file.path(PATH_FINAL, "revenus_boxplot.RData"))
+# source("dev/make_data.R", encoding = "UTF-8") # ~7sec à chaque redémarrage
