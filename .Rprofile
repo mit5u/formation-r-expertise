@@ -5,6 +5,7 @@ library(doremifasol)
 library(fs)
 library(glue)
 library(duckdb)
+library(assertthat)
 library(tidyverse)
 
 conflicted::conflict_prefer("filter", "dplyr")

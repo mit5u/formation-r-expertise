@@ -1,0 +1,55 @@
+
+# Jeu de données ----------------------------------------------------------
+
+# Paramètres
+set.seed(123)
+n <- 10000
+
+# Génération des données sur les revenus
+revenus <- data.frame(
+  id = 1:n,
+  age = sample(18:60, n, replace = TRUE),
+  genre = sample(c("Homme", "Femme"), n, replace = TRUE),
+  revenu = rnorm(n, mean = 45000, sd = 15000),
+  possede_permis = sample(c("oui", "non"), n, replace = TRUE),
+  niveau_education = sample(c("Brevet", "Bac", "Bac +3", "Bac +5"), n, replace = TRUE),
+  poids = runif(n, min = 50, max = 100)
+)
+
+# Définition d'une fonction pour générer un numéro de téléphone aléatoire dans un format donné
+generer_numero_telephone <- function() {
+  # Formats possibles pour le numéro de téléphone
+  formats <- c("+336XXXXXXXX", "06XXXXXXXX", "06.XX.XX.XX.XX", "06 XX XX XX XX")
+  
+  # Choix d'un format aléatoire parmi les formats spécifiés
+  format_aleatoire <- sample(formats, 1)
+  
+  # Remplacement des 'X' par des chiffres aléatoires
+  while (str_detect(format_aleatoire, "X")) {
+    format_aleatoire <- str_replace(format_aleatoire, "X", as.character(sample(0:9, 1)))
+  }
+  
+  return(format_aleatoire)
+}
+
+# Génération d'un vecteur de 10000 numéros de téléphone aléatoires
+numeros_telephone_aleatoires <- replicate(n, generer_numero_telephone())
+revenus$telephone <- numeros_telephone_aleatoires
+
+# Affichage du tableau des revenus
+head(revenus)
+
+# taille de tal table
+object.size(revenus)
+object_size(revenus)
+pryr::compare_size(revenus)
+
+# convertir en booléen la variable possede_permis
+
+revenus %>% 
+  mutate(possede_permis = possede_permis == "oui") %>% 
+  mutate(genre = as.factor(genre),
+         niveau_education = as.factor(niveau_education)) %>% 
+  object_size() -
+object_size(revenus) 
+
