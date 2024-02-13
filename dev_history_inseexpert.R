@@ -1,3 +1,5 @@
+#### Historique du développement du package bac à sable "inseexpert" ####
+
 # 0. Création du package
 # File > New Project > New Directory > R Package using devtools
 
