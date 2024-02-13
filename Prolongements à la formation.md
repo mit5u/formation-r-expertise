@@ -25,3 +25,5 @@
 - https://testthat.r-lib.org/index.html
 - https://covr.r-lib.org/
 - https://devguide.ropensci.org/
+- https://rtask.thinkr.fr/fr/fusen-creer-un-package-a-partir-dun-simple-fichier-rmarkdown/
+- https://thinkr-open.github.io/fusen/
