@@ -33,14 +33,18 @@ dbGetQuery(
 set.seed(1234)
 tictoc::tic()
 
-mutation_db <- tbl(connexion,
-                   dbplyr::in_schema("dvf", "mutation")) %>%
-  slice_sample(n = 100000) %>%
-  collect()
+mutation_db <- dbGetQuery(connexion,
+                          "
+                          SELECT * FROM dvf.mutation
+                          TABLESAMPLE SYSTEM(1)
+                          ") # ~1 % des observations, ou LIMIT 1000 pour avoir exactement 1000 lignes
 
-disposition_parc_db <- tbl(connexion,
-                           dbplyr::in_schema("dvf", "disposition_parcelle")) %>%
-  collect()
+
+disposition_parc_db <- dbGetQuery(connexion,
+                                  "
+                          SELECT * FROM dvf.disposition_parcelle
+                          TABLESAMPLE SYSTEM(1)
+                          ") # ~1% des observations, ou LIMIT 1000 pour avoir exactement 1000 lignes
 
 # jointure pour obtenir une table unique ----
 
