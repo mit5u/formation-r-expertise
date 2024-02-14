@@ -27,3 +27,4 @@
 - https://devguide.ropensci.org/
 - https://rtask.thinkr.fr/fr/fusen-creer-un-package-a-partir-dun-simple-fichier-rmarkdown/
 - https://thinkr-open.github.io/fusen/
+- https://rstudio.github.io/renv/articles/packages.html  
