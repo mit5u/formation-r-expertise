@@ -1,7 +1,8 @@
-dir.create("R")
+fs::dir_create("R")
 file.edit("R/script_sequence_1.R")
-dir.create("dev")
+fs::dir_create("dev")
 
-dir.create("data/input", recursive = TRUE)
-dir.create("data/final", recursive = TRUE)
-dir.create("data/input/doremifasol", recursive = TRUE)
+fs::dir_create("data/input", recursive = TRUE)
+fs::dir_create("data/final", recursive = TRUE)
+fs::dir_create("data/input/doremifasol", recursive = TRUE)
+fs::dir_create("data/input/dvf", recursive = TRUE)
