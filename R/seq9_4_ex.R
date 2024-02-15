@@ -196,7 +196,7 @@ visualiser_donnees_simulees <- function(donnees_compilees, annee) {
 }
 
 animation <- donnees_compilees %>%
-  simuler_population(n = 2030 - 2023) %>% 
+  simuler_population(n = 2060 - 2023) %>% # fin - début
   mutate(across(starts_with("POP"), 
                 # rotation pour avoir les femmes d'un côté, les hommes de l'autre
                 ~ if_else(SEXE == "M", -.x, .x))
@@ -217,9 +217,10 @@ animation <- donnees_compilees %>%
   scale_fill_manual(values = c("#39eab9", "#052337")) +
   theme_minimal() +
   transition_time(year) +
-  ease_aes('linear')
+  ease_aes('linear') +
+  exit_shrink()
 
-animate(animation, nframes = 10 * (2030-2023), fps = 10,
-        renderer = gifski_renderer("~/pyramide/"))
+animate(animation, # créer l'animation (et l'afficher dans le panneau Plots)
+        renderer = gifski_renderer())
 
-anim_save("pyramide.gif")
+anim_save("pyramide.gif") # sauvegarder l'animation sur le disque
