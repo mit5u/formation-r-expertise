@@ -195,8 +195,13 @@ visualiser_donnees_simulees <- function(donnees_compilees, annee) {
   return(p)
 }
 
+horizon_proj <- 2070
+
+visualiser_donnees_simulees(donnees_compilees, annee = horizon_proj)
+
 animation <- donnees_compilees %>%
-  simuler_population(n = 2060 - 2023) %>% # fin - début
+
+  simuler_population(n = horizon_proj - 2023) %>% # fin - début
   mutate(across(starts_with("POP"), 
                 # rotation pour avoir les femmes d'un côté, les hommes de l'autre
                 ~ if_else(SEXE == "M", -.x, .x))
@@ -224,3 +229,7 @@ animate(animation, # créer l'animation (et l'afficher dans le panneau Plots)
         renderer = gifski_renderer())
 
 anim_save("pyramide.gif") # sauvegarder l'animation sur le disque
+
+# je pense qu'il reste un problème dans ma transposition ou autre, car l'animation
+# fait juste danser la pyramide ; c'est fun mais ça ne ressemble pas trop aux
+# graphiques quand je les génère un par un
