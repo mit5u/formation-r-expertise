@@ -1,3 +1,12 @@
+library(memoise)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+
+library(gganimate) # bonus pour l'animation de la pyramide
+
+conflicted::conflicts_prefer(dplyr::lag)
+
 # make age pyramid data ----
 AGE <- c(rep(0:99, 2))
 SEXE <- c(rep("M", 100),
@@ -80,30 +89,6 @@ taux_natalite <- data.frame("AGE" = AGE,
                             "TAUX_NAT" = TAUX_NAT) %>%
   arrange(AGE, SEXE)
 
-# graphic helper ----
-
-visualiser_donnees_simulees <- function(annee) {
-  
-  if (annee < 2023) {
-    return("Les données ne peuvent être simulées qu'à une date ultérieure à 2023")
-  }
-  
-  donnees_simulees <- simuler_population(donnees_compilees, annee - 2023)
-  
-  donnees_simulees <- donnees_simulees %>%
-    mutate(
-      POP = ifelse(SEXE == "M", -1 * .data[[paste("POP", annee, sep = "")]], .data[[paste("POP", annee, sep = "")]])
-    ) %>%
-    ggplot(aes(x = AGE, y = POP, fill = SEXE)) + 
-    geom_bar(stat = "identity") +
-    coord_flip() +
-    labs(title = annee, x = "Âge", y = "Population", fill = "Sexe") +
-    scale_fill_manual(values = c("#39eab9", "#052337")) +
-    theme_minimal()
-  
-  return(donnees_simulees)
-  
-}
 
 # make final dataset ----
 taux_mortalite <- taux_mortalite %>%
@@ -135,7 +120,7 @@ predict_pop_n_years <- function(df,
   # assert_that(//TODO, msg = "les tranches d'âge et de sexe dans les tables de natalité et de mortalité fournies ne correspondent pas)
   year_ref <- as.numeric(str_sub(as_label(ensym(var_pop_ref)), -4)) # 4 derniers caractères du nom de variable passé en argument
   
-  df %>% 
+  df %>%
     mutate("POP{year_ref + n}_predict" := case_when(
       AGE == 0 ~
         {{var_pop_ref}} * (1 + 0.5 * TAUX_NAT/100 - TAUX_MORT/100) ** n,
@@ -144,29 +129,39 @@ predict_pop_n_years <- function(df,
     )
 }
 
-predict_pop_n_years(donnees_pyramide_age, n = 1)
+# predict_pop_n_years(donnees_pyramide_age, n = 1) %>% head()
 
 ## avec la récursivité ----
-conflicted::conflicts_prefer(dplyr::lag)
+
 simuler_population <- memoise(function(df,
                                        n = 1
 ) {
   
   if (n == 0) {
+    # initialisation
     return(df)
+    
   } else {
     
-    # Obtention du nom de la dernière colonne pour en extraire l'année 
+    # Année = 4 derniers caractères du dernier nom de colonne 
     prev_year <- as.numeric(str_sub(last(colnames(df)), -4))
     
     # Créez la nouvelle colonne et distinction à l'âge 0
     df <- df %>%
-      mutate("POP{prev_year + 1}" := ifelse(
+      mutate("POP{prev_year + 1}" := if_else(
         AGE == 0,
+        
+        # Effectifs des âge 0 (naissances de l'année)
+        # hypothèse de travail :
+        # autant de naissances de garçons que de filles, donc pour
+        # chaque sexe, l'effectif est la moitié de la natalité totale
         round(
-          sum(df[[paste0("POP", prev_year + 1)]] * df$TAUX_NAT) / 2),
+          sum(df[[glue("POP{prev_year}")]] * TAUX_NAT) / 2
+        ),
+        
+        # Effectifs des âges non nuls (cohorte vieillie d'un an, moins les décès)
         round(
-          lag(df[[paste0("POP", prev_year)]]) * (1 - dplyr::lag(df$TAUX_MORT))
+          lag(df[[glue("POP{prev_year}")]]) * (1 - lag(TAUX_MORT))
         )
       ))
     
@@ -176,6 +171,55 @@ simuler_population <- memoise(function(df,
   
 })
 
-simuler_population(donnees_compilees, n = 1)
+simuler_population(donnees_compilees, n = 1) %>% head()
 
-visualiser_donnees_simulees(2030)
+# graphic ----
+
+visualiser_donnees_simulees <- function(donnees_compilees, annee) {
+  
+  assert_that(annee >= 2023, msg = "Les données ne peuvent être simulées qu'à une date ultérieure à 2023")
+  
+  donnees_simulees <- simuler_population(donnees_compilees, annee - 2023)
+  
+  p <- donnees_simulees %>%
+    mutate(
+      # rotation pour avoir les femmes d'un côté, les hommes de l'autre
+      POP = ifelse(SEXE == "M", -1 * .data[[glue("POP{annee}")]], .data[[glue("POP{annee}")]])
+    ) %>%
+    ggplot(aes(x = AGE, y = POP, fill = SEXE)) + 
+    geom_bar(stat = "identity") +
+    coord_flip() +
+    labs(title = annee, x = "Âge", y = "Population", fill = "Sexe") +
+    scale_fill_manual(values = c("#39eab9", "#052337")) +
+    theme_minimal()
+  return(p)
+}
+
+animation <- donnees_compilees %>%
+  simuler_population(n = 2030 - 2023) %>% 
+  mutate(across(starts_with("POP"), 
+                # rotation pour avoir les femmes d'un côté, les hommes de l'autre
+                ~ if_else(SEXE == "M", -.x, .x))
+  ) %>%
+  # transposition (générer un graphique par année => avoir une variable année)
+  pivot_longer(cols = starts_with("POP"),
+               names_to = "year",
+               names_prefix = "POP",
+               values_to = "POP") %>% 
+  mutate(year = as.integer(year)) %>% # la variable du frame_time pour l'animation doit être numérique
+  ggplot(aes(x = AGE, y = POP, fill = SEXE)) + 
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = 'Année: {frame_time}',
+       x = "Âge",
+       y = "Population",
+       fill = "Sexe") +
+  scale_fill_manual(values = c("#39eab9", "#052337")) +
+  theme_minimal() +
+  transition_time(year) +
+  ease_aes('linear')
+
+animate(animation, nframes = 10 * (2030-2023), fps = 10,
+        renderer = gifski_renderer("~/pyramide/"))
+
+anim_save("pyramide.gif")
